@@ -1,26 +1,12 @@
-name: Deploy PHP App to InfinityFree
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  web-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🚚 Get latest code
-        uses: actions/checkout@v4
-
-      - name: 🔐 Create config.php for Live Server
+- name: 🔐 Create config.php and migrate.php
         run: |
+          # 1. config.php එක හැදීම
           cat << 'EOF' > config.php
           <?php
           $db_host = '${{ secrets.DB_HOST }}';
           $db_user = '${{ secrets.DB_USER }}';
           $db_pass = '${{ secrets.DB_PASS }}';
           $db_name = '${{ secrets.DB_NAME }}';
-
           try {
               $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
               $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -29,11 +15,50 @@ jobs:
           }
           ?>
           EOF
+          
+          # 2. migrate.php එක හැදීම
+          cat << 'EOF' > migrate.php
+          <?php
+          require_once 'config.php';
 
-      - name: 📂 Sync files to InfinityFree
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: htdocs/
+          $secret_token = '${{ secrets.MIGRATION_TOKEN }}'; // GitHub Secret එක කෙලින්ම මෙතනට එනවා
+
+          if (!isset($_GET['token']) || $_GET['token'] !== $secret_token) {
+              die("Unauthorized Access!");
+          }
+
+          try {
+              $pdo->exec("CREATE TABLE IF NOT EXISTS migrations_log (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  migration_file VARCHAR(255) UNIQUE,
+                  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+              )");
+
+              $files = glob("migrations/*.sql");
+              sort($files);
+              $success_count = 0;
+
+              foreach ($files as $file) {
+                  $filename = basename($file);
+                  $stmt = $pdo->prepare("SELECT COUNT(*) FROM migrations_log WHERE migration_file = ?");
+                  $stmt->execute([$filename]);
+                  
+                  if ($stmt->fetchColumn() == 0) {
+                      $sql = file_get_contents($file);
+                      $pdo->exec($sql);
+                      $stmt = $pdo->prepare("INSERT INTO migrations_log (migration_file) VALUES (?)");
+                      $stmt->execute([$filename]);
+                      echo "✅ Successfully Migrated: $filename <br>";
+                      $success_count++;
+                  }
+              }
+
+              if ($success_count == 0) {
+                  echo "👍 No new migrations found. Database is up to date.";
+              }
+
+          } catch (PDOException $e) {
+              die("❌ Migration Error: " . $e->getMessage());
+          }
+          ?>
+          EOF
