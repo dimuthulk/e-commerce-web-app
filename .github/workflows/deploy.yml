@@ -1,4 +1,18 @@
-- name: 🔐 Create config.php and migrate.php
+name: Deploy PHP App to InfinityFree
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Create config.php and migrate.php
         run: |
           # 1. config.php එක හැදීම
           cat << 'EOF' > config.php
@@ -15,13 +29,13 @@
           }
           ?>
           EOF
-          
+
           # 2. migrate.php එක හැදීම
           cat << 'EOF' > migrate.php
           <?php
           require_once 'config.php';
 
-          $secret_token = '${{ secrets.MIGRATION_TOKEN }}'; // GitHub Secret එක කෙලින්ම මෙතනට එනවා
+          $secret_token = '${{ secrets.MIGRATION_TOKEN }}';
 
           if (!isset($_GET['token']) || $_GET['token'] !== $secret_token) {
               die("Unauthorized Access!");
@@ -62,3 +76,15 @@
           }
           ?>
           EOF
+
+      - name: 📂 Sync files to InfinityFree
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: htdocs/
+
+      - name: 🔄 Run Database Auto-Migrations
+        run: |
+          curl -s "${{ secrets.LIVE_WEBSITE_URL }}/migrate.php?token=${{ secrets.MIGRATION_TOKEN }}"
