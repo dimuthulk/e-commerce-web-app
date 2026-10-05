@@ -3,7 +3,7 @@ name: Deploy PHP App to InfinityFree
 on:
   push:
     branches:
-      - main # main branch එකට push කරන හැම වෙලාවකම මේක run වෙනවා
+      - main
 
 jobs:
   web-deploy:
@@ -11,6 +11,24 @@ jobs:
     steps:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
+
+      - name: 🔐 Create config.php for Live Server
+        run: |
+          cat << 'EOF' > config.php
+          <?php
+          $db_host = '${{ secrets.DB_HOST }}';
+          $db_user = '${{ secrets.DB_USER }}';
+          $db_pass = '${{ secrets.DB_PASS }}';
+          $db_name = '${{ secrets.DB_NAME }}';
+
+          try {
+              $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
+              $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+          } catch (PDOException $e) {
+              die("Database connection failed.");
+          }
+          ?>
+          EOF
 
       - name: 📂 Sync files to InfinityFree
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
