@@ -87,4 +87,6 @@ jobs:
 
       - name: 🔄 Run Database Auto-Migrations
         run: |
-          curl -s "${{ secrets.LIVE_WEBSITE_URL }}/migrate.php?token=${{ secrets.MIGRATION_TOKEN }}"
+          echo "Click this URL to manually migrate if auto-migration fails:"
+          echo "${{ secrets.LIVE_WEBSITE_URL }}/migrate.php?token=${{ secrets.MIGRATION_TOKEN }}"
+          curl -s -L -A "Mozilla/5.0" "${{ secrets.LIVE_WEBSITE_URL }}/migrate.php?token=${{ secrets.MIGRATION_TOKEN }}" || true
