@@ -9,6 +9,10 @@ require_once 'config.php';
     <title>Dashboard | Dimuthu's E-Commerce</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script src="assets/js/tailwind-config.js"></script>
+
     <!-- Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -18,14 +22,14 @@ require_once 'config.php';
 <body class="bg-slate-50 min-h-screen">
 
     <!-- Navigation Bar -->
-    <nav class="bg-indigo-600 text-white shadow-lg">
+    <nav class="bg-primary text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-2 text-xl font-bold tracking-wide">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     Dimuthu's App
                 </div>
-                <div class="text-sm font-medium bg-indigo-500 px-3 py-1 rounded-full shadow-inner">
+                <div class="text-sm font-medium bg-primary-dark px-3 py-1 text-black rounded-full shadow-inner">
                     Admin Panel
                 </div>
             </div>
@@ -53,7 +57,7 @@ require_once 'config.php';
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-slate-800">Registered Users</h3>
-                <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
+                <span class="bg-primary-light text-primary-dark text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
             </div>
             
             <div class="overflow-x-auto">
